@@ -1,0 +1,2440 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+
+    <meta name="theme-color" content="#000000">
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <title>My Tracker Ultimate</title>
+
+    
+
+    <!-- Tailwind CSS -->
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Phosphor Icons -->
+
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    
+
+    <!-- PWA Manifest Injection -->
+
+    <link rel="manifest" id="my-manifest">
+
+    <script>
+
+        tailwind.config = {
+
+            darkMode: 'class',
+
+            theme: {
+
+                extend: {
+
+                    colors: {
+
+                        oled: '#000000',
+
+                        glass: 'rgba(255, 255, 255, 0.05)',
+
+                        'glass-border': 'rgba(255, 255, 255, 0.1)',
+
+                        neonBlue: '#00f3ff',
+
+                        neonPurple: '#bd00ff',
+
+                        neonGreen: '#00ff94',
+
+                        neonRed: '#ff0055',
+
+                    },
+
+                    fontFamily: {
+
+                        sans: ['Inter', 'sans-serif'],
+
+                        mono: ['JetBrains Mono', 'monospace'],
+
+                    },
+
+                    boxShadow: {
+
+                        'neon-glow': '0 0 10px var(--theme-color), 0 0 20px var(--theme-color-dim)',
+
+                    }
+
+                }
+
+            }
+
+        }
+
+    </script>
+
+    <style>
+
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap');
+
+        :root {
+
+            --theme-color: #00f3ff;
+
+            --theme-color-dim: rgba(0, 243, 255, 0.2);
+
+        }
+
+        * {
+
+            -webkit-tap-highlight-color: transparent;
+
+            box-sizing: border-box;
+
+            user-select: none;
+
+        }
+
+        
+
+        input, textarea { user-select: text; }
+
+        body {
+
+            background-color: #000000;
+
+            color: #ffffff;
+
+            font-family: 'Inter', sans-serif;
+
+            overflow: hidden;
+
+            height: 100vh;
+
+            width: 100vw;
+
+            overscroll-behavior: none;
+
+        }
+
+        /* Dynamic Theme Classes */
+
+        .text-theme { color: var(--theme-color); }
+
+        .bg-theme { background-color: var(--theme-color); }
+
+        .border-theme { border-color: var(--theme-color); }
+
+        .shadow-theme { box-shadow: 0 0 10px var(--theme-color), 0 0 20px var(--theme-color-dim); }
+
+        .from-theme { --tw-gradient-from: var(--theme-color); }
+
+        .to-theme { --tw-gradient-to: var(--theme-color); }
+
+        /* Glassmorphism Classes */
+
+        .glass-panel {
+
+            background: rgba(20, 20, 20, 0.6);
+
+            backdrop-filter: blur(40px);
+
+            -webkit-backdrop-filter: blur(40px);
+
+            border: 1px solid rgba(255, 255, 255, 0.08);
+
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+
+        }
+
+        .glass-dock {
+
+            background: rgba(10, 10, 10, 0.85);
+
+            backdrop-filter: blur(20px);
+
+            -webkit-backdrop-filter: blur(20px);
+
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+
+        }
+
+        /* Animations */
+
+        .tap-effect:active {
+
+            transform: scale(0.95);
+
+            transition: transform 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+
+        }
+
+        .view-section {
+
+            opacity: 0;
+
+            transform: scale(0.98);
+
+            transition: opacity 0.3s ease, transform 0.3s ease;
+
+            position: absolute;
+
+            top: 0;
+
+            left: 0;
+
+            width: 100%;
+
+            height: 100%;
+
+            pointer-events: none;
+
+            overflow-y: auto;
+
+            padding-bottom: 110px;
+
+            display: none;
+
+        }
+
+        .view-section.active {
+
+            opacity: 1;
+
+            transform: scale(1);
+
+            pointer-events: all;
+
+            display: block;
+
+        }
+
+        /* Scrollbar Styling */
+
+        ::-webkit-scrollbar { width: 4px; }
+
+        ::-webkit-scrollbar-track { background: transparent; }
+
+        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 4px; }
+
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Modal Transitions */
+
+        .modal-overlay {
+
+            opacity: 0;
+
+            pointer-events: none;
+
+            transition: opacity 0.3s ease;
+
+        }
+
+        .modal-overlay.open { opacity: 1; pointer-events: auto; }
+
+        .modal-content {
+
+            transform: translateY(100%);
+
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+
+        }
+
+        .modal-overlay.open .modal-content { transform: translateY(0); }
+
+        /* Hydration Bottle */
+
+        .bottle-container {
+
+            width: 120px;
+
+            height: 240px;
+
+            background: rgba(255, 255, 255, 0.05);
+
+            border: 4px solid rgba(255, 255, 255, 0.3);
+
+            border-radius: 20px 20px 40px 40px;
+
+            position: relative;
+
+            overflow: hidden;
+
+            margin: 0 auto;
+
+        }
+
+        .bottle-cap {
+
+            width: 60px;
+
+            height: 20px;
+
+            background: rgba(255, 255, 255, 0.3);
+
+            margin: 0 auto 5px auto;
+
+            border-radius: 5px 5px 0 0;
+
+        }
+
+        .water-level {
+
+            position: absolute;
+
+            bottom: 0;
+
+            left: 0;
+
+            width: 100%;
+
+            background: linear-gradient(to top, var(--theme-color), #0088ff);
+
+            transition: height 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+
+            box-shadow: 0 0 20px var(--theme-color);
+
+            opacity: 0.8;
+
+        }
+
+        
+
+        /* Custom Checkbox */
+
+        .custom-checkbox:checked + div {
+
+            background-color: var(--theme-color);
+
+            border-color: var(--theme-color);
+
+        }
+
+        .custom-checkbox:checked + div i { display: block; }
+
+        /* Money Card Glows */
+
+        .glow-green { border-color: #00ff94; box-shadow: 0 0 15px rgba(0, 255, 148, 0.3); }
+
+        .glow-orange { border-color: #ffaa00; box-shadow: 0 0 15px rgba(255, 170, 0, 0.3); }
+
+        .glow-red { border-color: #ff0055; box-shadow: 0 0 15px rgba(255, 0, 85, 0.3); }
+
+        /* Calc Grid */
+
+        .calc-btn {
+
+            background: rgba(255,255,255,0.05);
+
+            border-radius: 12px;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            font-size: 1.25rem;
+
+            height: 60px;
+
+            transition: background 0.2s;
+
+        }
+
+        .calc-btn:active { background: rgba(255,255,255,0.2); }
+
+        .calc-btn.accent { color: var(--theme-color); }
+
+        .calc-btn.op { color: #bd00ff; }
+
+        /* Toggle Switch */
+
+        .toggle-checkbox:checked {
+
+            right: 0;
+
+            border-color: var(--theme-color);
+
+        }
+
+        .toggle-checkbox:checked + .toggle-label {
+
+            background-color: var(--theme-color);
+
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+    <!-- App Container -->
+
+    <div id="app" class="relative w-full h-full">
+
+        
+
+        <!-- Header -->
+
+        <header class="absolute top-0 w-full h-16 glass-dock z-40 flex items-center justify-between px-5 pt-safe">
+
+            <div class="flex items-center gap-3">
+
+                <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-theme to-purple-600 overflow-hidden border border-white/20">
+
+                    <img id="header-avatar" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ffffff'%3E%3Cpath d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/%3E%3C/svg%3E" class="w-full h-full object-cover">
+
+                </div>
+
+                <h1 class="font-bold text-lg tracking-wide"><span class="text-theme">MY</span>TRACKER</h1>
+
+            </div>
+
+            <button onclick="navigateTo('settings')" class="text-white/70 hover:text-white tap-effect">
+
+                <i class="ph ph-gear text-2xl"></i>
+
+            </button>
+
+        </header>
+
+        <!-- VIEWS -->
+
+        <!-- 1. HOME DASHBOARD -->
+
+        <div id="view-home" class="view-section active pt-20 px-5">
+
+            <div class="mb-6">
+
+                <h2 class="text-3xl font-bold">Hello, <span id="user-name-display" class="text-transparent bg-clip-text bg-gradient-to-r from-theme to-purple-500">User</span></h2>
+
+                <p class="text-white/50 text-sm">Let's crush today's goals.</p>
+
+            </div>
+
+            <div class="glass-panel rounded-3xl p-6 mb-6 flex flex-col items-center justify-center relative">
+
+                <div class="relative w-48 h-48 flex items-center justify-center">
+
+                    <div id="focus-ring" class="absolute w-full h-full rounded-full" style="background: conic-gradient(var(--theme-color) 0%, #222 0%); mask: radial-gradient(transparent 60%, black 61%); -webkit-mask: radial-gradient(transparent 60%, black 61%);"></div>
+
+                    <div class="text-center z-10">
+
+                        <h3 id="daily-progress-text" class="text-4xl font-mono font-bold text-white">0%</h3>
+
+                        <p class="text-xs text-theme uppercase tracking-widest mt-1">Daily Focus</p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 mb-6">
+
+                <div onclick="navigateTo('money')" class="glass-panel rounded-2xl p-4 tap-effect cursor-pointer">
+
+                    <div class="flex items-center gap-2 mb-2">
+
+                        <i class="ph ph-wallet text-neonGreen text-xl"></i>
+
+                        <span class="text-xs font-bold text-white/60">WALLET</span>
+
+                    </div>
+
+                    <p id="home-balance" class="text-xl font-mono font-bold">$0.00</p>
+
+                </div>
+
+                <div onclick="navigateTo('hydration')" class="glass-panel rounded-2xl p-4 tap-effect cursor-pointer">
+
+                    <div class="flex items-center gap-2 mb-2">
+
+                        <i class="ph ph-drop text-theme text-xl"></i>
+
+                        <span class="text-xs font-bold text-white/60">WATER</span>
+
+                    </div>
+
+                    <p id="home-water" class="text-xl font-mono font-bold">0%</p>
+
+                </div>
+
+            </div>
+
+            <div>
+
+                <div class="flex justify-between items-center mb-3">
+
+                    <h3 class="font-bold text-lg">Upcoming</h3>
+
+                    <button onclick="navigateTo('tasks')" class="text-xs text-purple-400 font-bold">VIEW ALL</button>
+
+                </div>
+
+                <div id="home-tasks-list" class="space-y-3"></div>
+
+            </div>
+
+        </div>
+
+        <!-- 2. TASK MANAGER -->
+
+        <div id="view-tasks" class="view-section pt-20 px-5">
+
+            <div class="flex justify-between items-center mb-6">
+
+                <h2 class="text-2xl font-bold">Tasks</h2>
+
+                <div class="flex gap-2">
+
+                    <button onclick="openManageCategories('tasks')" class="w-10 h-10 glass-panel rounded-full flex items-center justify-center tap-effect"><i class="ph ph-tag text-white/70"></i></button>
+
+                    <button onclick="openModal('modal-add-task')" class="w-10 h-10 rounded-full bg-theme text-black flex items-center justify-center tap-effect shadow-theme">
+
+                        <i class="ph ph-plus text-xl font-bold"></i>
+
+                    </button>
+
+                </div>
+
+            </div>
+
+            
+
+            <div id="task-filters" class="flex gap-2 overflow-x-auto pb-4 mb-2 no-scrollbar items-center">
+
+                <!-- Filters injected via JS -->
+
+            </div>
+
+            <div id="tasks-container" class="space-y-3 pb-24"></div>
+
+        </div>
+
+        <!-- 3. MONEY MANAGER -->
+
+        <div id="view-money" class="view-section pt-20 px-5">
+
+            <div class="flex justify-between items-center mb-4">
+
+                <h2 class="text-2xl font-bold">Finances</h2>
+
+                <button onclick="openManageCategories('money')" class="w-10 h-10 glass-panel rounded-full flex items-center justify-center tap-effect"><i class="ph ph-tag text-white/70"></i></button>
+
+            </div>
+
+            
+
+            <div id="money-card" class="glass-panel rounded-2xl p-6 mb-6 border-2 transition-all duration-300">
+
+                <p class="text-white/60 text-sm mb-1">Total Balance</p>
+
+                <h1 id="money-total" class="text-4xl font-mono font-bold mb-4">$0.00</h1>
+
+                <div class="flex justify-between border-t border-white/10 pt-4">
+
+                    <div>
+
+                        <p class="text-xs text-neonGreen mb-1 flex items-center"><i class="ph ph-arrow-down-left mr-1"></i> INCOME</p>
+
+                        <p id="money-income" class="font-mono font-bold text-lg">$0.00</p>
+
+                    </div>
+
+                    <div class="text-right">
+
+                        <p class="text-xs text-neonRed mb-1 flex items-center justify-end"><i class="ph ph-arrow-up-right mr-1"></i> EXPENSE</p>
+
+                        <p id="money-expense" class="font-mono font-bold text-lg">$0.00</p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <button onclick="openModal('modal-add-money')" class="w-full mb-6 py-3 rounded-xl bg-theme/10 border border-theme text-theme font-bold tap-effect flex items-center justify-center">
+
+                <i class="ph ph-plus mr-1"></i> Add Transaction
+
+            </button>
+
+            <h3 class="font-bold text-lg mb-3">History</h3>
+
+            <div id="transaction-list" class="space-y-3 pb-24"></div>
+
+        </div>
+
+        <!-- 4. HYDRATION TRACKER -->
+
+        <div id="view-hydration" class="view-section pt-20 px-5 flex flex-col items-center">
+
+            <h2 class="text-2xl font-bold mb-8">Hydration</h2>
+
+            
+
+            <div class="bottle-cap"></div>
+
+            <div class="bottle-container tap-effect" onclick="addWater(100)">
+
+                <div id="water-liquid" class="water-level" style="height: 0%;"></div>
+
+                <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+
+                    <div class="text-center z-10 drop-shadow-md">
+
+                        <span id="water-amount" class="text-2xl font-bold block">0ml</span>
+
+                        <span id="water-percent" class="text-xs font-bold text-white/80">0%</span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            
+
+            <p class="text-white/40 text-xs mt-4 mb-8">Tap bottle to sip (100ml)</p>
+
+            <div class="flex gap-4 w-full justify-center">
+
+                <button onclick="addWater(250)" class="w-16 h-16 rounded-2xl glass-panel flex flex-col items-center justify-center tap-effect border border-theme">
+
+                    <i class="ph ph-plus text-theme mb-1"></i>
+
+                    <span class="text-xs">250ml</span>
+
+                </button>
+
+                <button onclick="addWater(500)" class="w-16 h-16 rounded-2xl glass-panel flex flex-col items-center justify-center tap-effect border border-theme">
+
+                    <i class="ph ph-plus text-theme mb-1"></i>
+
+                    <span class="text-xs">500ml</span>
+
+                </button>
+
+                <button onclick="resetWater()" class="w-16 h-16 rounded-2xl glass-panel flex flex-col items-center justify-center tap-effect border border-red-500/30">
+
+                    <i class="ph ph-arrow-counter-clockwise text-red-500 mb-1"></i>
+
+                    <span class="text-xs">Reset</span>
+
+                </button>
+
+            </div>
+
+        </div>
+
+        <!-- 5. STUDY & FILES -->
+
+        <div id="view-study" class="view-section pt-20 px-5">
+
+            <div class="flex justify-between items-center mb-6">
+
+                <h2 class="text-2xl font-bold">Study Space</h2>
+
+                <div class="flex gap-2">
+
+                    <button onclick="openModal('modal-timer')" class="w-10 h-10 glass-panel rounded-full flex items-center justify-center tap-effect"><i class="ph ph-timer text-purple-400"></i></button>
+
+                    <button onclick="openModal('modal-add-folder')" class="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center tap-effect text-white"><i class="ph ph-folder-plus"></i></button>
+
+                </div>
+
+            </div>
+
+            <div id="study-breadcrumbs" class="text-sm text-white/50 mb-4 hidden">
+
+                <span onclick="renderFolders()" class="underline cursor-pointer">All Subjects</span> <i class="ph ph-caret-right"></i> <span id="current-folder-name" class="text-white">Math</span>
+
+            </div>
+
+            <div id="study-content" class="grid grid-cols-2 gap-4 pb-24"></div>
+
+        </div>
+
+        <!-- 6. CALCULATOR -->
+
+        <div id="view-calc" class="view-section pt-20 px-5 flex flex-col justify-end pb-24 h-full">
+
+            <div class="glass-panel rounded-2xl p-4 mb-4 text-right">
+
+                <div id="calc-history" class="text-white/40 text-sm h-6"></div>
+
+                <div id="calc-display" class="text-4xl font-mono font-bold truncate">0</div>
+
+            </div>
+
+            
+
+            <div class="grid grid-cols-4 gap-3">
+
+                <button onclick="calcInput('C')" class="calc-btn text-neonRed">C</button>
+
+                <button onclick="calcInput('(')" class="calc-btn text-purple-400">(</button>
+
+                <button onclick="calcInput(')')" class="calc-btn text-purple-400">)</button>
+
+                <button onclick="calcInput('/')" class="calc-btn op">÷</button>
+
+                <button onclick="calcInput('sin')" class="calc-btn text-xs font-bold">sin</button>
+
+                <button onclick="calcInput('cos')" class="calc-btn text-xs font-bold">cos</button>
+
+                <button onclick="calcInput('tan')" class="calc-btn text-xs font-bold">tan</button>
+
+                <button onclick="calcInput('*')" class="calc-btn op">×</button>
+
+                <button onclick="calcInput('7')" class="calc-btn">7</button>
+
+                <button onclick="calcInput('8')" class="calc-btn">8</button>
+
+                <button onclick="calcInput('9')" class="calc-btn">9</button>
+
+                <button onclick="calcInput('-')" class="calc-btn op">-</button>
+
+                <button onclick="calcInput('4')" class="calc-btn">4</button>
+
+                <button onclick="calcInput('5')" class="calc-btn">5</button>
+
+                <button onclick="calcInput('6')" class="calc-btn">6</button>
+
+                <button onclick="calcInput('+')" class="calc-btn op">+</button>
+
+                <button onclick="calcInput('1')" class="calc-btn">1</button>
+
+                <button onclick="calcInput('2')" class="calc-btn">2</button>
+
+                <button onclick="calcInput('3')" class="calc-btn">3</button>
+
+                <button onclick="calcInput('log')" class="calc-btn text-xs font-bold op">log</button>
+
+                <button onclick="calcInput('0')" class="calc-btn col-span-2">0</button>
+
+                <button onclick="calcInput('.')" class="calc-btn">.</button>
+
+                <button onclick="calcResult()" class="calc-btn bg-purple-600 text-white shadow-lg">=</button>
+
+            </div>
+
+        </div>
+
+        <!-- 7. NOTES -->
+
+        <div id="view-notes" class="view-section pt-20 px-5">
+
+            <div class="flex justify-between items-center mb-6">
+
+                <h2 class="text-2xl font-bold">Notes</h2>
+
+                <button onclick="openNoteEditor()" class="w-10 h-10 rounded-full bg-neonGreen text-black flex items-center justify-center tap-effect">
+
+                    <i class="ph ph-plus text-xl font-bold"></i>
+
+                </button>
+
+            </div>
+
+            <div id="notes-list" class="space-y-3 pb-24"></div>
+
+        </div>
+
+        <!-- 8. SETTINGS -->
+
+        <div id="view-settings" class="view-section pt-20 px-5">
+
+            <h2 class="text-2xl font-bold mb-6">Settings</h2>
+
+            
+
+            <div class="glass-panel rounded-2xl p-6 mb-6 flex flex-col items-center">
+
+                <div class="relative w-24 h-24 rounded-full bg-gray-800 mb-4 overflow-hidden border-2 border-theme">
+
+                    <img id="settings-avatar" src="" class="w-full h-full object-cover">
+
+                    <input type="file" id="avatar-input" class="absolute inset-0 opacity-0 cursor-pointer" accept="image/*" onchange="updateAvatar(this)">
+
+                </div>
+
+                <input type="text" id="settings-name-input" class="bg-transparent border-b border-white/20 text-center font-bold text-xl py-1 focus:outline-none focus:border-theme" onchange="updateName(this.value)">
+
+            </div>
+
+            <div class="space-y-4 mb-8">
+
+                <!-- INSTALL BUTTON (New) -->
+
+                <button onclick="tryInstallApp()" class="w-full glass-panel p-4 rounded-xl flex items-center justify-between tap-effect group border border-theme">
+
+                    <div class="flex items-center gap-3">
+
+                        <i class="ph ph-download-simple text-theme text-2xl"></i>
+
+                        <div class="text-left">
+
+                            <span class="font-bold block">Install App</span>
+
+                            <span class="text-xs text-white/50">Add to Home Screen</span>
+
+                        </div>
+
+                    </div>
+
+                    <i class="ph ph-caret-right"></i>
+
+                </button>
+
+                <h3 class="text-sm font-bold text-white/50 uppercase tracking-widest mt-4">Customization</h3>
+
+                
+
+                <div class="glass-panel p-4 rounded-xl flex items-center justify-between">
+
+                    <span class="font-bold">Theme Color</span>
+
+                    <div class="flex gap-2">
+
+                        <button onclick="setTheme('#00f3ff')" class="w-6 h-6 rounded-full bg-[#00f3ff] border border-white/20"></button>
+
+                        <button onclick="setTheme('#bd00ff')" class="w-6 h-6 rounded-full bg-[#bd00ff] border border-white/20"></button>
+
+                        <button onclick="setTheme('#00ff94')" class="w-6 h-6 rounded-full bg-[#00ff94] border border-white/20"></button>
+
+                        <button onclick="setTheme('#ff0055')" class="w-6 h-6 rounded-full bg-[#ff0055] border border-white/20"></button>
+
+                    </div>
+
+                </div>
+
+                <div class="glass-panel p-4 rounded-xl flex items-center justify-between">
+
+                    <span class="font-bold">Sound Effects</span>
+
+                    <div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+
+                        <input type="checkbox" id="toggle-sound" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 border-gray-900 appearance-none cursor-pointer" onclick="toggleSetting('sound')"/>
+
+                        <label for="toggle-sound" class="toggle-label block overflow-hidden h-6 rounded-full bg-white/20 cursor-pointer"></label>
+
+                    </div>
+
+                </div>
+
+                 <div class="glass-panel p-4 rounded-xl flex items-center justify-between">
+
+                    <span class="font-bold">Notifications</span>
+
+                    <button onclick="requestNotify()" class="text-xs bg-white/10 px-3 py-1 rounded-lg">Enable</button>
+
+                </div>
+
+            </div>
+
+            <div class="space-y-3">
+
+                <button onclick="openInstagram()" class="block w-full glass-panel p-4 rounded-xl flex items-center justify-between tap-effect group bg-gradient-to-r hover:from-purple-900/50 hover:to-pink-900/50 transition-all">
+
+                    <div class="flex items-center gap-3">
+
+                        <i class="ph ph-instagram-logo text-pink-500 text-2xl group-hover:scale-110 transition-transform"></i>
+
+                        <span class="font-bold">Follow on Instagram</span>
+
+                    </div>
+
+                    <i class="ph ph-arrow-up-right"></i>
+
+                </button>
+
+                
+
+                <button onclick="confirmReset()" class="w-full glass-panel p-4 rounded-xl flex items-center gap-3 text-neonRed tap-effect border border-red-900/50">
+
+                    <i class="ph ph-trash text-2xl"></i>
+
+                    <span class="font-bold">Reset All Data</span>
+
+                </button>
+
+            </div>
+
+            
+
+            <p class="text-center text-white/20 text-xs mt-8 pb-8">Version 2.1 (Hyper-OS)</p>
+
+        </div>
+
+        <!-- BOTTOM DOCK -->
+
+        <nav class="fixed bottom-0 w-full h-20 glass-dock z-50 flex justify-around items-center px-2 pb-2 safe-pb">
+
+            <button onclick="navigateTo('home')" class="nav-item active flex flex-col items-center p-2 text-white/50 hover:text-white transition-colors">
+
+                <i class="ph ph-house text-2xl mb-1"></i>
+
+                <span class="text-[10px] font-bold">Home</span>
+
+            </button>
+
+            <button onclick="navigateTo('tasks')" class="nav-item flex flex-col items-center p-2 text-white/50 hover:text-white transition-colors">
+
+                <i class="ph ph-check-circle text-2xl mb-1"></i>
+
+                <span class="text-[10px] font-bold">Tasks</span>
+
+            </button>
+
+            <button onclick="navigateTo('money')" class="nav-item flex flex-col items-center p-2 text-white/50 hover:text-white transition-colors">
+
+                <i class="ph ph-currency-dollar text-2xl mb-1"></i>
+
+                <span class="text-[10px] font-bold">Money</span>
+
+            </button>
+
+            <button onclick="navigateTo('study')" class="nav-item flex flex-col items-center p-2 text-white/50 hover:text-white transition-colors">
+
+                <i class="ph ph-folder text-2xl mb-1"></i>
+
+                <span class="text-[10px] font-bold">Study</span>
+
+            </button>
+
+            <div class="relative group">
+
+                <button onclick="toggleMenu()" class="nav-item flex flex-col items-center p-2 text-white/50 hover:text-white transition-colors">
+
+                    <i class="ph ph-squares-four text-2xl mb-1"></i>
+
+                    <span class="text-[10px] font-bold">Apps</span>
+
+                </button>
+
+                <!-- Popup Menu -->
+
+                <div id="popup-menu" class="absolute bottom-20 right-0 glass-panel rounded-xl p-2 w-32 hidden flex-col gap-2 transform origin-bottom-right transition-all">
+
+                    <button onclick="navigateTo('hydration'); toggleMenu()" class="flex items-center gap-2 p-2 rounded-lg hover:bg-white/10 text-xs font-bold text-left"><i class="ph ph-drop text-theme"></i> Water</button>
+
+                    <button onclick="navigateTo('calc'); toggleMenu()" class="flex items-center gap-2 p-2 rounded-lg hover:bg-white/10 text-xs font-bold text-left"><i class="ph ph-calculator text-purple-400"></i> Calc</button>
+
+                    <button onclick="navigateTo('notes'); toggleMenu()" class="flex items-center gap-2 p-2 rounded-lg hover:bg-white/10 text-xs font-bold text-left"><i class="ph ph-notepad text-neonGreen"></i> Notes</button>
+
+                </div>
+
+            </div>
+
+        </nav>
+
+        <!-- MODALS -->
+
+        
+
+        <!-- Install Guide Modal -->
+
+        <div id="modal-install-guide" class="modal-overlay fixed inset-0 z-[80] flex items-center justify-center bg-black/90 backdrop-blur-md">
+
+            <div class="modal-content w-full max-w-sm bg-gray-900 border border-white/10 rounded-2xl p-6 m-4 flex flex-col items-center text-center">
+
+                <i class="ph ph-download-simple text-4xl text-theme mb-4"></i>
+
+                <h3 class="font-bold text-xl mb-2">Install App</h3>
+
+                <p id="install-text" class="text-white/60 text-sm mb-6">To install this app on your device:</p>
+
+                
+
+                <div class="bg-white/5 rounded-xl p-4 w-full text-left mb-6">
+
+                    <p class="text-sm mb-2"><span class="text-theme font-bold">1.</span> Tap the <span class="font-bold">Browser Menu</span> (3 dots or Share icon).</p>
+
+                    <p class="text-sm"><span class="text-theme font-bold">2.</span> Select <span class="font-bold">"Add to Home Screen"</span> or <span class="font-bold">"Install App"</span>.</p>
+
+                </div>
+
+                <button onclick="closeModal('modal-install-guide')" class="w-full py-3 bg-theme text-black font-bold rounded-xl">Got it</button>
+
+            </div>
+
+        </div>
+
+        <!-- Manage Categories Modal (Generic) -->
+
+        <div id="modal-manage-cats" class="modal-overlay fixed inset-0 z-[70] flex items-center justify-center bg-black/80 backdrop-blur-sm">
+
+            <div class="modal-content w-full max-w-md bg-gray-900 border border-white/10 rounded-2xl p-6 m-4 h-[60vh] flex flex-col">
+
+                <div class="flex justify-between items-center mb-4">
+
+                    <h3 class="font-bold text-xl">Manage Categories</h3>
+
+                    <button onclick="closeModal('modal-manage-cats')" class="text-white/50">Done</button>
+
+                </div>
+
+                <div class="flex gap-2 mb-4">
+
+                    <input type="text" id="new-cat-input" placeholder="New Category..." class="flex-1 bg-white/5 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-theme">
+
+                    <button onclick="addManagedCategory()" class="bg-theme text-black px-4 rounded-xl font-bold tap-effect">Add</button>
+
+                </div>
+
+                <div id="manage-cats-list" class="flex-1 overflow-y-auto space-y-2">
+
+                    <!-- List injected JS -->
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- Add Task Modal -->
+
+        <div id="modal-add-task" class="modal-overlay fixed inset-0 z-[60] flex items-end justify-center bg-black/80 backdrop-blur-sm">
+
+            <div class="modal-content w-full max-w-md bg-gray-900 border-t border-white/10 rounded-t-3xl p-6 pb-10">
+
+                <div class="flex justify-between items-center mb-6">
+
+                    <h3 class="font-bold text-xl">New Task</h3>
+
+                    <button onclick="closeModal('modal-add-task')" class="text-white/50">Cancel</button>
+
+                </div>
+
+                <input type="text" id="new-task-title" placeholder="What needs doing?" class="w-full bg-white/5 rounded-xl p-4 text-white placeholder-white/30 mb-4 focus:outline-none focus:ring-1 focus:ring-theme">
+
+                <div class="flex gap-2 mb-6">
+
+                    <select id="new-task-cat" class="bg-white/5 rounded-lg px-4 py-2 text-sm text-white focus:outline-none w-full">
+
+                        <!-- Injected via JS -->
+
+                    </select>
+
+                </div>
+
+                <button onclick="addTask()" class="w-full bg-theme text-black font-bold py-4 rounded-xl tap-effect">Create Task</button>
+
+            </div>
+
+        </div>
+
+        <!-- Add Money Modal -->
+
+        <div id="modal-add-money" class="modal-overlay fixed inset-0 z-[60] flex items-end justify-center bg-black/80 backdrop-blur-sm">
+
+            <div class="modal-content w-full max-w-md bg-gray-900 border-t border-white/10 rounded-t-3xl p-6 pb-10">
+
+                <div class="flex justify-between items-center mb-6">
+
+                    <h3 class="font-bold text-xl">Add Transaction</h3>
+
+                    <button onclick="closeModal('modal-add-money')" class="text-white/50">Cancel</button>
+
+                </div>
+
+                <input type="text" id="new-money-title" placeholder="Description" class="w-full bg-white/5 rounded-xl p-4 text-white placeholder-white/30 mb-2 focus:outline-none">
+
+                
+
+                <!-- Category Select for Money -->
+
+                <select id="new-money-cat" class="w-full bg-white/5 rounded-xl px-4 py-2 text-sm text-white focus:outline-none mb-4">
+
+                    <!-- Injected JS -->
+
+                </select>
+
+                <input type="number" id="new-money-amount" placeholder="0.00" class="w-full bg-white/5 rounded-xl p-4 text-white placeholder-white/30 mb-4 focus:outline-none font-mono">
+
+                <div class="flex gap-3 mb-6">
+
+                    <button onclick="setTxType('income')" id="btn-type-income" class="flex-1 py-3 rounded-xl border border-neonGreen/30 text-neonGreen font-bold bg-neonGreen/10">Income</button>
+
+                    <button onclick="setTxType('expense')" id="btn-type-expense" class="flex-1 py-3 rounded-xl border border-white/10 text-white/50 font-bold">Expense</button>
+
+                </div>
+
+                <button onclick="addTransaction()" class="w-full bg-white text-black font-bold py-4 rounded-xl tap-effect">Save</button>
+
+            </div>
+
+        </div>
+
+        <!-- Add Folder Modal -->
+
+        <div id="modal-add-folder" class="modal-overlay fixed inset-0 z-[60] flex items-end justify-center bg-black/80 backdrop-blur-sm">
+
+            <div class="modal-content w-full max-w-md bg-gray-900 border-t border-white/10 rounded-t-3xl p-6 pb-10">
+
+                <h3 class="font-bold text-xl mb-4">New Subject Folder</h3>
+
+                <input type="text" id="new-folder-name" placeholder="Subject Name (e.g. Physics)" class="w-full bg-white/5 rounded-xl p-4 text-white placeholder-white/30 mb-6 focus:outline-none">
+
+                <div class="flex gap-2">
+
+                    <button onclick="closeModal('modal-add-folder')" class="flex-1 py-3 bg-white/10 rounded-xl">Cancel</button>
+
+                    <button onclick="addFolder()" class="flex-1 py-3 bg-purple-600 text-white font-bold rounded-xl tap-effect">Create</button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- Upload File Modal -->
+
+        <div id="modal-upload-file" class="modal-overlay fixed inset-0 z-[60] flex items-end justify-center bg-black/80 backdrop-blur-sm">
+
+            <div class="modal-content w-full max-w-md bg-gray-900 border-t border-white/10 rounded-t-3xl p-6 pb-10">
+
+                <h3 class="font-bold text-xl mb-4">Upload Material</h3>
+
+                <div class="w-full h-32 border-2 border-dashed border-white/20 rounded-xl flex flex-col items-center justify-center mb-6 relative">
+
+                    <i class="ph ph-cloud-arrow-up text-3xl mb-2 text-theme"></i>
+
+                    <span class="text-xs text-white/50">Tap to select file</span>
+
+                    <input type="file" id="sim-file-input" class="absolute inset-0 opacity-0" onchange="handleFileUpload(this)">
+
+                </div>
+
+                <button onclick="closeModal('modal-upload-file')" class="w-full py-3 bg-white/10 rounded-xl">Cancel</button>
+
+            </div>
+
+        </div>
+
+        <!-- File Viewer Modal (New) -->
+
+        <div id="modal-file-viewer" class="modal-overlay fixed inset-0 z-[70] flex items-center justify-center bg-black/90 backdrop-blur-md">
+
+            <div class="modal-content w-full h-full flex flex-col p-6">
+
+                <div class="flex justify-between items-center mb-8">
+
+                    <h3 class="font-bold text-lg text-white/70">File Preview</h3>
+
+                    <button onclick="closeModal('modal-file-viewer')" class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center"><i class="ph ph-x text-xl"></i></button>
+
+                </div>
+
+                <div class="flex-1 flex flex-col items-center justify-center border border-white/10 rounded-2xl bg-gray-900/50 p-8">
+
+                    <i class="ph ph-file-text text-6xl text-theme mb-4"></i>
+
+                    <h2 id="viewer-filename" class="text-2xl font-bold mb-2 text-center break-all">filename.pdf</h2>
+
+                    <p class="text-white/40 text-sm mb-8">Simulated Content Preview</p>
+
+                    <div class="w-full h-48 bg-white/5 rounded-xl p-4 overflow-hidden relative">
+
+                        <p class="font-mono text-xs text-theme/50 break-all opacity-50">
+
+                            01010101001010001010100001110101001010010101010001
+
+                            10010101010101011110001010010101010100101010101010
+
+                            01010101001010001010100001110101001010010101010001
+
+                            ... [End of Simulated Data]
+
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- Timer Modal -->
+
+        <div id="modal-timer" class="modal-overlay fixed inset-0 z-[60] flex items-end justify-center bg-black/80 backdrop-blur-sm">
+
+             <div class="modal-content w-full max-w-md bg-gray-900 border-t border-white/10 rounded-t-3xl p-6 pb-10 flex flex-col items-center">
+
+                <h3 class="text-purple-400 uppercase tracking-widest text-xs mb-4">Focus Timer</h3>
+
+                <div id="timer-display" class="text-6xl font-mono font-bold mb-8">00:00</div>
+
+                <div class="flex gap-4 w-full">
+
+                    <button onclick="toggleTimer()" id="btn-timer-toggle" class="flex-1 py-4 bg-purple-600 text-white font-bold rounded-xl tap-effect">Start</button>
+
+                    <button onclick="resetTimer()" class="w-16 py-4 bg-white/10 rounded-xl flex items-center justify-center"><i class="ph ph-arrow-counter-clockwise"></i></button>
+
+                </div>
+
+                <button onclick="closeModal('modal-timer')" class="mt-4 text-white/40 text-sm">Minimize</button>
+
+             </div>
+
+        </div>
+
+        <!-- Note Editor Modal -->
+
+        <div id="modal-note-editor" class="modal-overlay fixed inset-0 z-[60] bg-black flex flex-col">
+
+            <div class="flex justify-between items-center p-4 border-b border-white/10">
+
+                <button onclick="closeModal('modal-note-editor')" class="text-white/60">Cancel</button>
+
+                <span class="font-bold">Editor</span>
+
+                <button onclick="saveNote()" class="text-neonGreen font-bold">Save</button>
+
+            </div>
+
+            <div class="flex-1 p-4">
+
+                <input type="text" id="note-title" placeholder="Title..." class="w-full bg-transparent text-2xl font-bold mb-4 focus:outline-none">
+
+                <textarea id="note-body" placeholder="Start typing..." class="w-full h-full bg-transparent text-white/80 resize-none focus:outline-none font-sans leading-relaxed"></textarea>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- MAIN SCRIPT -->
+
+    <script>
+
+        // --- MANIFEST INJECTION (PWA) ---
+
+        function injectManifest() {
+
+            const manifest = {
+
+                "name": "My Tracker Ultimate",
+
+                "short_name": "My Tracker",
+
+                "start_url": ".",
+
+                "display": "standalone",
+
+                "background_color": "#000000",
+
+                "theme_color": "#000000",
+
+                "orientation": "portrait",
+
+                "icons": [
+
+                    {
+
+                        "src": "https://cdn-icons-png.flaticon.com/512/3665/3665923.png", 
+
+                        "sizes": "192x192",
+
+                        "type": "image/png"
+
+                    },
+
+                    {
+
+                        "src": "https://cdn-icons-png.flaticon.com/512/3665/3665923.png",
+
+                        "sizes": "512x512",
+
+                        "type": "image/png"
+
+                    }
+
+                ]
+
+            };
+
+            const stringManifest = JSON.stringify(manifest);
+
+            const blob = new Blob([stringManifest], {type: 'application/json'});
+
+            const manifestURL = URL.createObjectURL(blob);
+
+            document.querySelector('#my-manifest').setAttribute('href', manifestURL);
+
+        }
+
+        injectManifest();
+
+        // --- INSTALL LOGIC ---
+
+        let deferredPrompt;
+
+        
+
+        // Capture install event
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+
+            e.preventDefault();
+
+            deferredPrompt = e;
+
+            // Optionally notify user here, but we have a dedicated button in settings
+
+        });
+
+        function tryInstallApp() {
+
+            // Android / Chrome (Supported)
+
+            if (deferredPrompt) {
+
+                deferredPrompt.prompt();
+
+                deferredPrompt.userChoice.then((choiceResult) => {
+
+                    if (choiceResult.outcome === 'accepted') {
+
+                        console.log('User accepted the A2HS prompt');
+
+                    }
+
+                    deferredPrompt = null;
+
+                });
+
+            } else {
+
+                // iOS / Unsupported / Already Installed / Preview Mode
+
+                openModal('modal-install-guide');
+
+            }
+
+        }
+
+        // --- INSTAGRAM LINK FIX ---
+
+        function openInstagram() {
+
+            const url = "https://www.instagram.com/urtype.raj?igsh=MTR6N2RibDJ6ank0cA==";
+
+            window.open(url, '_blank', 'noopener,noreferrer');
+
+            SoundFX.play('click');
+
+        }
+
+        // --- SOUND ENGINE ---
+
+        const SoundFX = {
+
+            ctx: null,
+
+            init: function() {
+
+                if(!this.ctx) {
+
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+
+                    this.ctx = new AudioContext();
+
+                }
+
+            },
+
+            play: function(type) {
+
+                if(!state.settings.sound) return;
+
+                this.init();
+
+                if (this.ctx.state === 'suspended') this.ctx.resume();
+
+                const osc = this.ctx.createOscillator();
+
+                const gain = this.ctx.createGain();
+
+                osc.connect(gain);
+
+                gain.connect(this.ctx.destination);
+
+                
+
+                const now = this.ctx.currentTime;
+
+                
+
+                if(type === 'click') {
+
+                    osc.type = 'sine';
+
+                    osc.frequency.setValueAtTime(800, now);
+
+                    osc.frequency.exponentialRampToValueAtTime(300, now + 0.1);
+
+                    gain.gain.setValueAtTime(0.05, now);
+
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+
+                    osc.start(now);
+
+                    osc.stop(now + 0.1);
+
+                } else if (type === 'success') {
+
+                    osc.type = 'triangle';
+
+                    osc.frequency.setValueAtTime(440, now);
+
+                    osc.frequency.linearRampToValueAtTime(880, now + 0.1);
+
+                    gain.gain.setValueAtTime(0.05, now);
+
+                    gain.gain.linearRampToValueAtTime(0, now + 0.3);
+
+                    osc.start(now);
+
+                    osc.stop(now + 0.3);
+
+                }
+
+            }
+
+        };
+
+        // --- NOTIFICATIONS ---
+
+        function requestNotify() {
+
+            if (!("Notification" in window)) {
+
+                alert("This browser does not support desktop notification");
+
+            } else {
+
+                Notification.requestPermission().then(permission => {
+
+                    if (permission === "granted") {
+
+                        state.settings.notifications = true;
+
+                        new Notification("My Tracker Ultimate", { body: "Notifications Enabled!" });
+
+                        saveState();
+
+                    }
+
+                });
+
+            }
+
+        }
+
+        function sendNotify(msg) {
+
+            if(state.settings.notifications && Notification.permission === "granted") {
+
+                new Notification("My Tracker", { body: msg });
+
+            }
+
+        }
+
+        // --- STATE MANAGEMENT ---
+
+        const DEFAULT_STATE = {
+
+            user: { name: 'User', avatar: null },
+
+            settings: { sound: true, notifications: false, theme: '#00f3ff' },
+
+            tasks: [
+
+                { id: 1, title: 'Welcome to My Tracker', category: 'Personal', completed: false },
+
+            ],
+
+            categories: ['Personal', 'Work', 'Urgent', 'Health'],
+
+            moneyCategories: ['Salary', 'Food', 'Transport', 'Bills', 'Ent.', 'Misc'],
+
+            money: { balance: 0, income: 0, expense: 0, history: [] },
+
+            water: { current: 0, target: 2000 },
+
+            folders: [
+
+                { id: 'f1', name: 'General', files: [] }
+
+            ],
+
+            notes: [],
+
+            activeView: 'home'
+
+        };
+
+        let state = JSON.parse(localStorage.getItem('myTrackerData')) || DEFAULT_STATE;
+
+        // Migrations
+
+        if(!state.settings) state.settings = DEFAULT_STATE.settings;
+
+        if(!state.settings.theme) state.settings.theme = '#00f3ff';
+
+        if(!state.moneyCategories) state.moneyCategories = DEFAULT_STATE.moneyCategories;
+
+        function saveState() {
+
+            localStorage.setItem('myTrackerData', JSON.stringify(state));
+
+            renderAll();
+
+        }
+
+        // --- NAVIGATION & UI ---
+
+        function navigateTo(viewId) {
+
+            SoundFX.play('click');
+
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('text-theme', 'text-white'));
+
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+
+            document.getElementById(`view-${viewId}`).classList.add('active');
+
+            state.activeView = viewId;
+
+            renderAll();
+
+        }
+
+        function toggleMenu() {
+
+            const menu = document.getElementById('popup-menu');
+
+            menu.classList.toggle('hidden');
+
+            menu.classList.toggle('flex');
+
+            SoundFX.play('click');
+
+        }
+
+        function openModal(id) {
+
+            document.getElementById(id).classList.add('open');
+
+            SoundFX.play('click');
+
+        }
+
+        function closeModal(id) {
+
+            document.getElementById(id).classList.remove('open');
+
+            SoundFX.play('click');
+
+        }
+
+        // --- HOME ---
+
+        function renderHome() {
+
+            document.getElementById('user-name-display').innerText = state.user.name;
+
+            if(state.user.avatar) document.getElementById('header-avatar').src = state.user.avatar;
+
+            const totalTasks = state.tasks.length;
+
+            const completedTasks = state.tasks.filter(t => t.completed).length;
+
+            const percent = totalTasks === 0 ? 0 : Math.round((completedTasks / totalTasks) * 100);
+
+            const ring = document.getElementById('focus-ring');
+
+            ring.style.background = `conic-gradient(var(--theme-color) ${percent}%, #222 0%)`;
+
+            document.getElementById('daily-progress-text').innerText = `${percent}%`;
+
+            document.getElementById('home-balance').innerText = `$${state.money.balance.toFixed(2)}`;
+
+            const waterP = Math.min(100, Math.round((state.water.current / state.water.target) * 100));
+
+            document.getElementById('home-water').innerText = `${waterP}%`;
+
+            const list = document.getElementById('home-tasks-list');
+
+            list.innerHTML = '';
+
+            state.tasks.filter(t => !t.completed).slice(0, 3).forEach(t => {
+
+                list.innerHTML += `
+
+                    <div class="glass-panel p-3 rounded-xl flex items-center justify-between">
+
+                        <span class="text-sm font-medium">${t.title}</span>
+
+                        <span class="text-[10px] uppercase px-2 py-1 rounded bg-white/5 text-white/60">${t.category}</span>
+
+                    </div>
+
+                `;
+
+            });
+
+        }
+
+        // --- TASKS ---
+
+        let currentTaskFilter = 'all';
+
+        function filterTasks(cat) {
+
+            currentTaskFilter = cat;
+
+            renderTasks();
+
+            SoundFX.play('click');
+
+        }
+
+        function renderTasks() {
+
+            const filterContainer = document.getElementById('task-filters');
+
+            let filterHTML = `<button onclick="filterTasks('all')" class="px-4 py-2 rounded-full glass-panel text-xs font-bold transition-colors tap-effect whitespace-nowrap ${currentTaskFilter === 'all' ? 'bg-theme text-black' : ''}">All</button>`;
+
+            
+
+            state.categories.forEach(cat => {
+
+                const isActive = currentTaskFilter === cat;
+
+                filterHTML += `<button onclick="filterTasks('${cat}')" class="px-4 py-2 rounded-full glass-panel text-xs font-bold transition-colors tap-effect whitespace-nowrap ${isActive ? 'bg-theme text-black' : ''}">${cat}</button>`;
+
+            });
+
+            filterContainer.innerHTML = filterHTML;
+
+            // Modal Select
+
+            const select = document.getElementById('new-task-cat');
+
+            if(select) select.innerHTML = state.categories.map(cat => `<option value="${cat}">${cat}</option>`).join('');
+
+            // Task List
+
+            const container = document.getElementById('tasks-container');
+
+            container.innerHTML = '';
+
+            const filtered = currentTaskFilter === 'all' ? state.tasks : state.tasks.filter(t => t.category === currentTaskFilter);
+
+            
+
+            if(filtered.length === 0) container.innerHTML = `<div class="text-center text-white/30 py-10 text-sm">No tasks here yet.</div>`;
+
+            filtered.forEach(task => {
+
+                container.innerHTML += `
+
+                    <div class="glass-panel p-4 rounded-xl flex items-center gap-3 animate-fade-in">
+
+                        <label class="relative flex items-center p-3 rounded-full cursor-pointer">
+
+                            <input type="checkbox" class="custom-checkbox hidden" ${task.completed ? 'checked' : ''} onchange="toggleTask(${task.id})">
+
+                            <div class="w-6 h-6 border-2 border-white/20 rounded-full flex items-center justify-center transition-colors">
+
+                                <i class="ph ph-check text-black text-xs hidden"></i>
+
+                            </div>
+
+                        </label>
+
+                        <div class="flex-1">
+
+                            <h3 class="font-medium ${task.completed ? 'line-through text-white/30' : 'text-white'}">${task.title}</h3>
+
+                            <span class="text-xs text-theme">${task.category}</span>
+
+                        </div>
+
+                        <button onclick="deleteTask(${task.id})" class="text-white/20 hover:text-red-500 p-2"><i class="ph ph-trash"></i></button>
+
+                    </div>
+
+                `;
+
+            });
+
+        }
+
+        function addTask() {
+
+            const title = document.getElementById('new-task-title').value;
+
+            const cat = document.getElementById('new-task-cat').value;
+
+            if(!title) return;
+
+            state.tasks.push({ id: Date.now(), title, category: cat, completed: false });
+
+            document.getElementById('new-task-title').value = '';
+
+            closeModal('modal-add-task');
+
+            saveState();
+
+            SoundFX.play('success');
+
+        }
+
+        function toggleTask(id) {
+
+            const task = state.tasks.find(t => t.id === id);
+
+            if(task) {
+
+                task.completed = !task.completed;
+
+                SoundFX.play(task.completed ? 'success' : 'click');
+
+                if(task.completed) sendNotify(`Task Completed: ${task.title}`);
+
+            }
+
+            saveState();
+
+        }
+
+        function deleteTask(id) {
+
+            if(confirm('Delete task?')) {
+
+                state.tasks = state.tasks.filter(t => t.id !== id);
+
+                saveState();
+
+                SoundFX.play('click');
+
+            }
+
+        }
+
+        // --- MANAGED CATEGORIES (Universal) ---
+
+        let managingType = 'tasks';
+
+        function openManageCategories(type) {
+
+            managingType = type;
+
+            openModal('modal-manage-cats');
+
+            renderManagedCategories();
+
+        }
+
+        function renderManagedCategories() {
+
+            const list = document.getElementById('manage-cats-list');
+
+            const source = managingType === 'tasks' ? state.categories : state.moneyCategories;
+
+            list.innerHTML = '';
+
+            source.forEach((cat, idx) => {
+
+                list.innerHTML += `
+
+                    <div class="flex justify-between items-center bg-white/5 p-3 rounded-xl">
+
+                        <span>${cat}</span>
+
+                        <button onclick="deleteManagedCategory(${idx})" class="text-red-500"><i class="ph ph-minus-circle"></i></button>
+
+                    </div>
+
+                `;
+
+            });
+
+        }
+
+        function addManagedCategory() {
+
+            const input = document.getElementById('new-cat-input');
+
+            const val = input.value.trim();
+
+            if(!val) return;
+
+            
+
+            if(managingType === 'tasks') state.categories.push(val);
+
+            else state.moneyCategories.push(val);
+
+            
+
+            input.value = '';
+
+            saveState();
+
+            renderManagedCategories();
+
+            SoundFX.play('click');
+
+        }
+
+        function deleteManagedCategory(idx) {
+
+            if(managingType === 'tasks') state.categories.splice(idx, 1);
+
+            else state.moneyCategories.splice(idx, 1);
+
+            saveState();
+
+            renderManagedCategories();
+
+            SoundFX.play('click');
+
+        }
+
+        // --- MONEY ---
+
+        let tempTxType = 'income';
+
+        function renderMoney() {
+
+            const m = state.money;
+
+            document.getElementById('money-total').innerText = `$${m.balance.toFixed(2)}`;
+
+            document.getElementById('money-income').innerText = `$${m.income.toFixed(2)}`;
+
+            document.getElementById('money-expense').innerText = `$${m.expense.toFixed(2)}`;
+
+            const card = document.getElementById('money-card');
+
+            card.className = 'glass-panel rounded-2xl p-6 mb-6 border-2 transition-all duration-300';
+
+            if (m.balance < 0) card.classList.add('glow-red');
+
+            else if (m.balance < 100) card.classList.add('glow-orange');
+
+            else card.classList.add('glow-green');
+
+            // Category Select in Modal
+
+            const select = document.getElementById('new-money-cat');
+
+            if(select) select.innerHTML = state.moneyCategories.map(cat => `<option value="${cat}">${cat}</option>`).join('');
+
+            const list = document.getElementById('transaction-list');
+
+            list.innerHTML = '';
+
+            [...m.history].reverse().slice(0, 10).forEach(tx => {
+
+                list.innerHTML += `
+
+                    <div class="glass-panel p-3 rounded-xl flex justify-between items-center">
+
+                        <div>
+
+                            <p class="font-bold text-sm">${tx.title}</p>
+
+                            <div class="flex items-center gap-2">
+
+                                <span class="text-[10px] bg-white/10 px-1 rounded text-theme">${tx.category || 'Misc'}</span>
+
+                                <span class="text-xs text-white/40">${new Date(tx.date).toLocaleDateString()}</span>
+
+                            </div>
+
+                        </div>
+
+                        <p class="font-mono font-bold ${tx.type === 'income' ? 'text-neonGreen' : 'text-white'}">
+
+                            ${tx.type === 'income' ? '+' : '-'}$${tx.amount}
+
+                        </p>
+
+                    </div>
+
+                `;
+
+            });
+
+        }
+
+        function setTxType(type) {
+
+            tempTxType = type;
+
+            const btnInc = document.getElementById('btn-type-income');
+
+            const btnExp = document.getElementById('btn-type-expense');
+
+            if(type === 'income') {
+
+                btnInc.className = 'flex-1 py-3 rounded-xl border border-neonGreen/30 text-neonGreen font-bold bg-neonGreen/10';
+
+                btnExp.className = 'flex-1 py-3 rounded-xl border border-white/10 text-white/50 font-bold';
+
+            } else {
+
+                btnExp.className = 'flex-1 py-3 rounded-xl border border-neonRed/30 text-neonRed font-bold bg-neonRed/10';
+
+                btnInc.className = 'flex-1 py-3 rounded-xl border border-white/10 text-white/50 font-bold';
+
+            }
+
+            SoundFX.play('click');
+
+        }
+
+        function addTransaction() {
+
+            const title = document.getElementById('new-money-title').value;
+
+            const amount = parseFloat(document.getElementById('new-money-amount').value);
+
+            const cat = document.getElementById('new-money-cat').value;
+
+            
+
+            if(!title || isNaN(amount)) return;
+
+            const tx = { title, amount, type: tempTxType, category: cat, date: Date.now() };
+
+            state.money.history.push(tx);
+
+            
+
+            if(tempTxType === 'income') {
+
+                state.money.income += amount;
+
+                state.money.balance += amount;
+
+            } else {
+
+                state.money.expense += amount;
+
+                state.money.balance -= amount;
+
+            }
+
+            document.getElementById('new-money-title').value = '';
+
+            document.getElementById('new-money-amount').value = '';
+
+            closeModal('modal-add-money');
+
+            saveState();
+
+            SoundFX.play('success');
+
+        }
+
+        // --- WATER ---
+
+        function renderWater() {
+
+            const percent = Math.min(100, (state.water.current / state.water.target) * 100);
+
+            document.getElementById('water-liquid').style.height = `${percent}%`;
+
+            document.getElementById('water-amount').innerText = `${state.water.current}ml`;
+
+            document.getElementById('water-percent').innerText = `${Math.round(percent)}%`;
+
+        }
+
+        function addWater(ml) {
+
+            state.water.current += ml;
+
+            renderWater();
+
+            saveState();
+
+            SoundFX.play('click');
+
+        }
+
+        function resetWater() {
+
+            state.water.current = 0;
+
+            saveState();
+
+        }
+
+        // --- FILES ---
+
+        let activeFolderId = null;
+
+        function renderFolders() {
+
+            activeFolderId = null;
+
+            document.getElementById('study-breadcrumbs').classList.add('hidden');
+
+            const container = document.getElementById('study-content');
+
+            container.innerHTML = '';
+
+            state.folders.forEach(f => {
+
+                container.innerHTML += `
+
+                    <div onclick="openFolder('${f.id}')" class="glass-panel p-4 rounded-2xl flex flex-col items-center justify-center h-32 tap-effect">
+
+                        <i class="ph ph-folder text-4xl text-purple-500 mb-2"></i>
+
+                        <span class="font-bold text-sm">${f.name}</span>
+
+                        <span class="text-xs text-white/40">${f.files.length} files</span>
+
+                    </div>
+
+                `;
+
+            });
+
+        }
+
+        function openFolder(id) {
+
+            SoundFX.play('click');
+
+            activeFolderId = id;
+
+            const folder = state.folders.find(f => f.id === id);
+
+            document.getElementById('study-breadcrumbs').classList.remove('hidden');
+
+            document.getElementById('current-folder-name').innerText = folder.name;
+
+            const container = document.getElementById('study-content');
+
+            container.innerHTML = `
+
+                <div onclick="openModal('modal-upload-file')" class="border-2 border-dashed border-white/20 p-4 rounded-2xl flex flex-col items-center justify-center h-32 tap-effect">
+
+                    <i class="ph ph-plus text-2xl text-white/50 mb-1"></i>
+
+                    <span class="text-xs text-white/50">Add File</span>
+
+                </div>
+
+            `;
+
+            folder.files.forEach(file => {
+
+                container.innerHTML += `
+
+                    <div onclick="viewFile('${file.name}')" class="glass-panel p-4 rounded-2xl flex flex-col justify-between h-32 relative group tap-effect cursor-pointer">
+
+                        <i class="ph ph-file-text text-3xl text-theme mb-1"></i>
+
+                        <div>
+
+                            <p class="font-bold text-xs truncate w-full">${file.name}</p>
+
+                            <p class="text-[10px] text-white/40">${file.size}</p>
+
+                        </div>
+
+                    </div>
+
+                `;
+
+            });
+
+        }
+
+        function viewFile(name) {
+
+            document.getElementById('viewer-filename').innerText = name;
+
+            openModal('modal-file-viewer');
+
+        }
+
+        function addFolder() {
+
+            const name = document.getElementById('new-folder-name').value;
+
+            if(!name) return;
+
+            state.folders.push({ id: 'f'+Date.now(), name, files: [] });
+
+            document.getElementById('new-folder-name').value = '';
+
+            closeModal('modal-add-folder');
+
+            saveState();
+
+        }
+
+        function handleFileUpload(input) {
+
+            if(input.files && input.files[0] && activeFolderId) {
+
+                const file = input.files[0];
+
+                const folder = state.folders.find(f => f.id === activeFolderId);
+
+                const size = (file.size / 1024).toFixed(1) + ' KB';
+
+                folder.files.push({ name: file.name, size, type: file.type });
+
+                saveState();
+
+                openFolder(activeFolderId);
+
+                closeModal('modal-upload-file');
+
+                input.value = '';
+
+                SoundFX.play('success');
+
+            }
+
+        }
+
+        // --- TIMER ---
+
+        let timerInterval;
+
+        let timerSeconds = 0;
+
+        let isTimerRunning = false;
+
+        function toggleTimer() {
+
+            const btn = document.getElementById('btn-timer-toggle');
+
+            SoundFX.play('click');
+
+            if(isTimerRunning) {
+
+                clearInterval(timerInterval);
+
+                isTimerRunning = false;
+
+                btn.innerText = 'Start';
+
+                btn.classList.replace('bg-neonRed', 'bg-purple-600');
+
+            } else {
+
+                isTimerRunning = true;
+
+                btn.innerText = 'Pause';
+
+                btn.classList.replace('bg-purple-600', 'bg-neonRed');
+
+                timerInterval = setInterval(() => {
+
+                    timerSeconds++;
+
+                    const m = Math.floor(timerSeconds / 60).toString().padStart(2, '0');
+
+                    const s = (timerSeconds % 60).toString().padStart(2, '0');
+
+                    document.getElementById('timer-display').innerText = `${m}:${s}`;
+
+                    if(timerSeconds > 0 && timerSeconds % 1500 === 0) { // 25 min pomodoro alert
+
+                         SoundFX.play('success');
+
+                         sendNotify('Focus Session Complete!');
+
+                    }
+
+                }, 1000);
+
+            }
+
+        }
+
+        function resetTimer() {
+
+            clearInterval(timerInterval);
+
+            isTimerRunning = false;
+
+            timerSeconds = 0;
+
+            document.getElementById('timer-display').innerText = "00:00";
+
+            document.getElementById('btn-timer-toggle').innerText = 'Start';
+
+        }
+
+        // --- CALC ---
+
+        let calcExpr = '';
+
+        function calcInput(val) {
+
+            SoundFX.play('click');
+
+            if(val === 'C') calcExpr = '';
+
+            else if(['sin','cos','tan','log','sqrt'].includes(val)) calcExpr += `Math.${val}(`;
+
+            else calcExpr += val;
+
+            document.getElementById('calc-display').innerText = calcExpr || '0';
+
+        }
+
+        function calcResult() {
+
+            try {
+
+                const res = eval(calcExpr);
+
+                document.getElementById('calc-history').innerText = calcExpr + ' =';
+
+                document.getElementById('calc-display').innerText = res;
+
+                calcExpr = res.toString();
+
+                SoundFX.play('success');
+
+            } catch(e) {
+
+                document.getElementById('calc-display').innerText = 'Error';
+
+                calcExpr = '';
+
+            }
+
+        }
+
+        // --- NOTES ---
+
+        function renderNotes() {
+
+            const list = document.getElementById('notes-list');
+
+            list.innerHTML = '';
+
+            state.notes.forEach(note => {
+
+                list.innerHTML += `
+
+                    <div onclick="editNote(${note.id})" class="glass-panel p-4 rounded-xl tap-effect">
+
+                        <h3 class="font-bold mb-1">${note.title}</h3>
+
+                        <p class="text-sm text-white/50 truncate">${note.body}</p>
+
+                    </div>
+
+                `;
+
+            });
+
+        }
+
+        let editingNoteId = null;
+
+        function openNoteEditor() {
+
+            editingNoteId = null;
+
+            document.getElementById('note-title').value = '';
+
+            document.getElementById('note-body').value = '';
+
+            openModal('modal-note-editor');
+
+        }
+
+        function editNote(id) {
+
+            const note = state.notes.find(n => n.id === id);
+
+            editingNoteId = id;
+
+            document.getElementById('note-title').value = note.title;
+
+            document.getElementById('note-body').value = note.body;
+
+            openModal('modal-note-editor');
+
+        }
+
+        function saveNote() {
+
+            const title = document.getElementById('note-title').value || 'Untitled';
+
+            const body = document.getElementById('note-body').value;
+
+            if(editingNoteId) {
+
+                const note = state.notes.find(n => n.id === editingNoteId);
+
+                note.title = title;
+
+                note.body = body;
+
+            } else {
+
+                state.notes.push({ id: Date.now(), title, body });
+
+            }
+
+            saveState();
+
+            closeModal('modal-note-editor');
+
+            SoundFX.play('success');
+
+        }
+
+        // --- SETTINGS ---
+
+        function updateName(val) { state.user.name = val; saveState(); }
+
+        function updateAvatar(input) {
+
+            if(input.files && input.files[0]) {
+
+                const reader = new FileReader();
+
+                reader.onload = function(e) {
+
+                    state.user.avatar = e.target.result;
+
+                    document.getElementById('settings-avatar').src = e.target.result;
+
+                    saveState();
+
+                };
+
+                reader.readAsDataURL(input.files[0]);
+
+            }
+
+        }
+
+        function setTheme(color) {
+
+            state.settings.theme = color;
+
+            saveState();
+
+            SoundFX.play('click');
+
+        }
+
+        function toggleSetting(key) {
+
+            state.settings[key] = !state.settings[key];
+
+            saveState();
+
+            SoundFX.play('click');
+
+        }
+
+        function confirmReset() {
+
+            if(confirm("Reset all data? This cannot be undone.")) {
+
+                localStorage.removeItem('myTrackerData');
+
+                location.reload();
+
+            }
+
+        }
+
+        // --- INIT ---
+
+        function init() {
+
+            // Apply Theme
+
+            const root = document.documentElement;
+
+            root.style.setProperty('--theme-color', state.settings.theme);
+
+            root.style.setProperty('--theme-color-dim', state.settings.theme + '33'); // 20% opacity hex
+
+            
+
+            document.getElementById('toggle-sound').checked = state.settings.sound;
+
+            document.getElementById('settings-name-input').value = state.user.name;
+
+            if(state.user.avatar) document.getElementById('header-avatar').src = state.user.avatar;
+
+            renderAll();
+
+            navigateTo(state.activeView);
+
+        }
+
+        function renderAll() {
+
+            const root = document.documentElement;
+
+            root.style.setProperty('--theme-color', state.settings.theme);
+
+            root.style.setProperty('--theme-color-dim', state.settings.theme + '33');
+
+            if(state.activeView === 'home') renderHome();
+
+            if(state.activeView === 'tasks') renderTasks();
+
+            if(state.activeView === 'money') renderMoney();
+
+            if(state.activeView === 'hydration') renderWater();
+
+            if(state.activeView === 'study') renderFolders();
+
+            if(state.activeView === 'notes') renderNotes();
+
+        }
+
+        init();
+
+    </script>
+
+</body>
+
+</html>
+
